@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+option go_package = "github.com/dbut2/slackgpt/proto/pkg";
+
+message Request {
+  string prompt = 1;
+  string channel = 2;
+  string thread_timestamp = 3;
+}
