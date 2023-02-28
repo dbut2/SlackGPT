@@ -2,8 +2,13 @@ syntax = "proto3";
 
 option go_package = "github.com/dbut2/slackgpt/proto/pkg";
 
+import "google/protobuf/timestamp.proto";
+
 message Request {
   string prompt = 1;
-  string channel = 2;
-  string thread_timestamp = 3;
+  string user = 2;
+  google.protobuf.Timestamp timestamp = 3;
+  string slack_channel = 4;
+  string slack_thread_timestamp = 5;
+  string slack_msg_timestamp = 6;
 }
