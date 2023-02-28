@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"cloud.google.com/go/pubsub"
-	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/slackevents"
 
 	"github.com/dbut2/slackgpt/pkg/events"
@@ -17,21 +16,17 @@ import (
 
 type Config struct {
 	SlackSigningSecret string
-	SlackBotToken      string
 	PubsubProjectID    string
 	PubsubTopic        string
 }
 
 type Web struct {
 	verifier     *verifier.Verifier
-	slack        *slack.Client
 	eventHandler events.Handler
 }
 
 func New(config Config) (*Web, error) {
 	verifier := verifier.New(config.SlackSigningSecret)
-
-	sc := slack.New(config.SlackBotToken)
 
 	psc, err := pubsub.NewClient(context.Background(), config.PubsubProjectID)
 	if err != nil {
@@ -42,8 +37,7 @@ func New(config Config) (*Web, error) {
 
 	return &Web{
 		verifier:     verifier,
-		slack:        sc,
-		eventHandler: events.New(sc, sender),
+		eventHandler: events.New(sender),
 	}, nil
 }
 

@@ -57,7 +57,5 @@ func (c *Client) GetThreadMessages(channel, threadTs string, from, to time.Time)
 
 func (c *Client) Respond(ctx context.Context, response models.Response) error {
 	_, _, err := c.slack.PostMessage(response.SlackChannel, slack.MsgOptionTS(response.SlackThreadTS), slack.MsgOptionText(response.Completion, false))
-	if err != nil {
-	}
 	return err
 }

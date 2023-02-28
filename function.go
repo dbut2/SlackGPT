@@ -10,13 +10,11 @@ import (
 
 func SlackEvent(w http.ResponseWriter, r *http.Request) {
 	slackSigningSecret := os.Getenv("SLACK_SIGNING_SECRET")
-	slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
 	pubsubProjectID := os.Getenv("PROJECT_ID")
 	pubsubTopic := os.Getenv("PUBSUB_TOPIC")
 
 	handler, err := web.New(web.Config{
 		SlackSigningSecret: slackSigningSecret,
-		SlackBotToken:      slackBotToken,
 		PubsubProjectID:    pubsubProjectID,
 		PubsubTopic:        pubsubTopic,
 	})

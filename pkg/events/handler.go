@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/slackevents"
 
 	"github.com/dbut2/slackgpt/pkg/models"
@@ -17,26 +16,19 @@ type Handler interface {
 }
 
 type DefaultHandler struct {
-	slack  *slack.Client
 	sender slackgpt.Sender
 }
 
-func New(slack *slack.Client, sender slackgpt.Sender) Handler {
+func New(sender slackgpt.Sender) Handler {
 	return &DefaultHandler{
-		slack:  slack,
 		sender: sender,
 	}
 }
 
 func (h *DefaultHandler) HandleAppMentionEvent(a *slackevents.AppMentionEvent) error {
-	user, err := h.slack.GetUserInfo(a.User)
-	if err != nil {
-		return err
-	}
-
 	return h.sender.Send(context.Background(), models.Request{
 		Prompt:        a.Text,
-		User:          user.ID,
+		User:          a.User,
 		Timestamp:     time.Now(),
 		SlackChannel:  a.Channel,
 		SlackThreadTS: a.ThreadTimeStamp,
@@ -49,14 +41,9 @@ func (h *DefaultHandler) HandleMessageEvent(a *slackevents.MessageEvent) error {
 		return nil
 	}
 
-	user, err := h.slack.GetUserInfo(a.User)
-	if err != nil {
-		return err
-	}
-
 	return h.sender.Send(context.Background(), models.Request{
 		Prompt:        a.Text,
-		User:          user.ID,
+		User:          a.User,
 		Timestamp:     time.Now(),
 		SlackChannel:  a.Channel,
 		SlackThreadTS: a.ThreadTimeStamp,
