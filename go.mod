@@ -1,6 +1,6 @@
 module github.com/dbut2/slackgpt
 
-go 1.19
+go 1.20
 
 require (
 	cloud.google.com/go/pubsub v1.28.0
