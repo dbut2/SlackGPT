@@ -5,9 +5,9 @@ import (
 
 	"cloud.google.com/go/pubsub"
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/dbut2/slackgpt/pkg/models"
+	"github.com/dbut2/slackgpt/pkg/slacktime"
 	"github.com/dbut2/slackgpt/proto/pkg"
 )
 
@@ -25,7 +25,7 @@ func (c *Sender) Send(ctx context.Context, req models.Request) error {
 	r := &pkg.Request{
 		Prompt:               req.Prompt,
 		User:                 req.User,
-		Timestamp:            timestamppb.New(req.Timestamp),
+		Timestamp:            slacktime.ParseTime(req.Timestamp),
 		SlackChannel:         req.SlackChannel,
 		SlackThreadTimestamp: req.SlackThreadTS,
 		SlackMsgTimestamp:    req.SlackMsgTS,

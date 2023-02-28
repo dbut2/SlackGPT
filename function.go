@@ -8,7 +8,7 @@ import (
 	"github.com/dbut2/slackgpt/internal/web"
 )
 
-func Event(w http.ResponseWriter, r *http.Request) {
+func SlackEvent(w http.ResponseWriter, r *http.Request) {
 	slackSigningSecret := os.Getenv("SLACK_SIGNING_SECRET")
 	slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
 	pubsubProjectID := os.Getenv("PROJECT_ID")

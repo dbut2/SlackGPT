@@ -9,7 +9,7 @@ import (
 	"github.com/dbut2/slackgpt/internal/pubsub"
 )
 
-func Generate(ctx context.Context, m pubsub.PubSubMessage) error {
+func PubSubGenerate(ctx context.Context, m pubsub.PubSubMessage) error {
 	openAIToken := os.Getenv("OPENAI_TOKEN")
 	slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
 	slackBotID := os.Getenv("SLACK_BOT_ID")

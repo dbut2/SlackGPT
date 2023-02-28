@@ -12,6 +12,7 @@ import (
 	"github.com/dbut2/slackgpt/pkg/prompt"
 	"github.com/dbut2/slackgpt/pkg/slackclient"
 	"github.com/dbut2/slackgpt/pkg/slackgpt"
+	"github.com/dbut2/slackgpt/pkg/slacktime"
 	"github.com/dbut2/slackgpt/proto/pkg"
 )
 
@@ -53,7 +54,7 @@ func (p *Pubsub) GenerateFromPubSub(ctx context.Context, m PubSubMessage) error 
 	return p.sender.Send(ctx, models.Request{
 		Prompt:        req.Prompt,
 		User:          req.User,
-		Timestamp:     req.Timestamp.AsTime(),
+		Timestamp:     slacktime.ParseString(req.Timestamp),
 		SlackChannel:  req.SlackChannel,
 		SlackThreadTS: req.SlackThreadTimestamp,
 		SlackMsgTS:    req.SlackMsgTimestamp,
