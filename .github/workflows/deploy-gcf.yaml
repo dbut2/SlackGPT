@@ -35,6 +35,7 @@ jobs:
             PUBSUB_TOPIC=generate-completion
           ingress_settings: allow_all
           https_trigger_security_level: secure_always
+          deploy_timeout: 600
 
 
   deploy-pubsub-generate:
@@ -67,3 +68,5 @@ jobs:
           event_trigger_type: google.pubsub.topic.publish
           event_trigger_resource: projects/slack-gpt/topics/generate-completion
           event_trigger_service: pubsub.googleapis.com
+          event_trigger_retry: true
+          deploy_timeout: 600
