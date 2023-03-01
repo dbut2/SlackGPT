@@ -21,15 +21,17 @@ type Default struct {
 	historyDuration time.Duration
 	historyCount    int
 	maxPromptLength int
+	separator       string
 }
 
 func NewEnhancer(sc *slackclient.Client, botID string, opts ...EnhanceOpt) Enhancer {
 	e := &Default{
 		slack:           sc,
 		botID:           botID,
-		historyDuration: time.Hour,
-		historyCount:    5,
+		historyDuration: time.Minute * 15,
+		historyCount:    9,
 		maxPromptLength: 1000,
+		separator:       "\n\n---\n\n",
 	}
 
 	for _, opt := range opts {
@@ -57,18 +59,28 @@ func (e *Default) Enhance(prompt models.Request) (string, error) {
 		msgs = msgs[len(msgs)-1-e.historyCount:]
 	}
 
-	ss := formatMessages(msgs)
+	ss, err := e.formatMessages(msgs)
+	if err != nil {
+		return "", err
+	}
+
+	bot, err := e.slack.GetUserInfo(e.botID)
+	if err != nil {
+		return "", err
+	}
+	preamble := fmt.Sprintf("Welcome to the conversation. Your name is %s and you are a Slack Bot chat bot. Your username is <@%s>.\n\n", bot.Profile.FirstName, bot.ID)
 
 	enhanced := ""
 	for _, s := range ss {
-		enhanced += s + "\n"
+		enhanced += s + e.separator
+	}
+	enhanced += fmt.Sprintf("[\"%s\" <@%s>]: ", bot.Name, bot.ID)
+
+	if len(enhanced)+len(preamble) > e.maxPromptLength {
+		enhanced = enhanced[len(enhanced)+len(preamble)-1-e.maxPromptLength:]
 	}
 
-	enhanced += fmt.Sprintf("<@%s>:", e.botID)
-
-	if len(enhanced) > e.maxPromptLength {
-		enhanced = enhanced[len(enhanced)-1-e.maxPromptLength:]
-	}
+	enhanced = preamble + enhanced
 
 	return enhanced, nil
 }
@@ -93,14 +105,29 @@ func WithMaxPromptLength(length int) EnhanceOpt {
 	}
 }
 
-func formatMessage(msg slack.Message) string {
-	return fmt.Sprintf("<@%s>: %s", msg.User, msg.Text)
+func WithSeparator(separator string) EnhanceOpt {
+	return func(e *Default) {
+		e.separator = separator
+	}
 }
 
-func formatMessages(msgs []slack.Message) []string {
-	s := make([]string, len(msgs))
-	for i, msg := range msgs {
-		s[i] = formatMessage(msg)
+func (e *Default) formatMessage(msg slack.Message) (string, error) {
+	user, err := e.slack.GetUserInfo(msg.User)
+	if err != nil {
+		return "", err
 	}
-	return s
+
+	return fmt.Sprintf("[\"%s\" <@%s>]: %s", user.Profile.FirstName, user.ID, msg.Text), nil
+}
+
+func (e *Default) formatMessages(msgs []slack.Message) ([]string, error) {
+	s := make([]string, len(msgs))
+	var err error
+	for i, msg := range msgs {
+		s[i], err = e.formatMessage(msg)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return s, nil
 }
