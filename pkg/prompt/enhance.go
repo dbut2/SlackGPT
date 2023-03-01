@@ -30,7 +30,7 @@ func NewEnhancer(sc *slackclient.Client, botID string, opts ...EnhanceOpt) Enhan
 		botID:           botID,
 		historyDuration: time.Minute * 15,
 		historyCount:    9,
-		maxPromptLength: 1000,
+		maxPromptLength: 10000,
 		separator:       "\n\n---\n\n",
 	}
 
