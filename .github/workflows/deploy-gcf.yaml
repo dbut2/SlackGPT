@@ -1,0 +1,36 @@
+name: Deploy Google Cloud Functions
+
+on:
+  push:
+    tags:
+  pull_request:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: gcloud Auth
+        id: auth
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Deploy slack-event
+        uses: google-github-actions/deploy-cloud-functions@v1
+        with:
+          name: 'slack-event'
+          region: 'australia-southeast1'
+          runtime: 'go120'
+          entry_point: 'SlackEvent'
+
+      - name: Deploy pubsub-generate
+        uses: google-github-actions/deploy-cloud-functions@v1
+        with:
+          name: 'pubsub-generate'
+          region: 'australia-southeast1'
+          runtime: 'go120'
+          entry_point: 'PubSubGenerate'
