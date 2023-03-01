@@ -74,7 +74,7 @@ func (e *Default) Enhance(prompt models.Request) (string, error) {
 	for _, s := range ss {
 		enhanced += s + e.separator
 	}
-	enhanced += fmt.Sprintf("[\"%s\" <@%s>]: ", bot.Name, bot.ID)
+	enhanced += fmt.Sprintf("[%s <@%s>]: ", bot.Name, bot.ID)
 
 	if len(enhanced)+len(preamble) > e.maxPromptLength {
 		enhanced = enhanced[len(enhanced)+len(preamble)-1-e.maxPromptLength:]
