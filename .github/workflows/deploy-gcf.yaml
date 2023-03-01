@@ -24,17 +24,18 @@ jobs:
       - name: Deploy slack-event
         uses: google-github-actions/deploy-cloud-functions@v1
         with:
-          name: 'slack-event'
-          region: 'australia-southeast1'
-          runtime: 'go120'
-          entry_point: 'SlackEvent'
+          name: slack-event
+          region: australia-southeast1
+          runtime: go120
+          entry_point: SlackEvent
           secret_environment_variables: |
             SLACK_SIGNING_SECRET=projects/511533786015/secrets/slack-signing-secret/versions/1
           env_vars: |
             PROJECT_ID=slack-gpt
             PUBSUB_TOPIC=generate-completion
-          event_trigger_type: http
-          
+          ingress_settings: allow_all
+          https_trigger_security_level: secure_always
+
 
   deploy-pubsub-generate:
     name: Deploy pubsub-generate
@@ -53,16 +54,16 @@ jobs:
       - name: Deploy pubsub-generate
         uses: google-github-actions/deploy-cloud-functions@v1
         with:
-          name: 'pubsub-generate'
-          region: 'australia-southeast1'
-          runtime: 'go120'
-          entry_point: 'PubSubGenerate'
+          name: pubsub-generate
+          region: australia-southeast1
+          runtime: go120
+          entry_point: PubSubGenerate
           secret_environment_variables: |
             OPENAI_TOKEN=projects/511533786015/secrets/openai-token/versions/1
             SLACK_BOT_TOKEN=projects/511533786015/secrets/slack-bot-token/versions/1
             SLACK_BOT_ID=projects/511533786015/secrets/slack-bot-id/versions/1
           env_vars: |
             MODEL=text-davinci-003
-          event_trigger_type: pubsub
+          event_trigger_type: google.pubsub.topic.publish
           event_trigger_resource: projects/slack-gpt/topics/generate-completion
-
+          event_trigger_service: pubsub.googleapis.com
