@@ -11,17 +11,17 @@ import (
 )
 
 type Client struct {
-	slack *slack.Client
+	*slack.Client
 }
 
 func New(sc *slack.Client) *Client {
 	return &Client{
-		slack: sc,
+		Client: sc,
 	}
 }
 
 func (c *Client) GetChannelMessages(channel string, from, to time.Time) ([]slack.Message, error) {
-	resp, err := c.slack.GetConversationHistory(&slack.GetConversationHistoryParameters{
+	resp, err := c.GetConversationHistory(&slack.GetConversationHistoryParameters{
 		ChannelID: channel,
 		Inclusive: true,
 		Latest:    slacktime.ParseTime(to),
@@ -41,7 +41,7 @@ func (c *Client) GetChannelMessages(channel string, from, to time.Time) ([]slack
 }
 
 func (c *Client) GetThreadMessages(channel, threadTs string, from, to time.Time) ([]slack.Message, error) {
-	msgs, _, _, err := c.slack.GetConversationReplies(&slack.GetConversationRepliesParameters{
+	msgs, _, _, err := c.GetConversationReplies(&slack.GetConversationRepliesParameters{
 		ChannelID: channel,
 		Timestamp: threadTs,
 		Inclusive: true,
@@ -56,6 +56,6 @@ func (c *Client) GetThreadMessages(channel, threadTs string, from, to time.Time)
 }
 
 func (c *Client) Respond(ctx context.Context, response models.Response) error {
-	_, _, err := c.slack.PostMessage(response.SlackChannel, slack.MsgOptionTS(response.SlackThreadTS), slack.MsgOptionText(response.Completion, false))
+	_, _, err := c.PostMessage(response.SlackChannel, slack.MsgOptionTS(response.SlackThreadTS), slack.MsgOptionText(response.Completion, false))
 	return err
 }

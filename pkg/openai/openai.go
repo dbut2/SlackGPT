@@ -20,18 +20,34 @@ type Client struct {
 	enhancer  prompt.Enhancer
 	responder slackgpt.Responder
 	model     string
+	separator string
 }
 
-func New(client *gogpt.Client, enhancer prompt.Enhancer, responder slackgpt.Responder, model string) *Client {
+func New(client *gogpt.Client, enhancer prompt.Enhancer, responder slackgpt.Responder, model string, opts ...ClientOption) *Client {
 	if model == "" {
 		model = gogpt.GPT3TextDavinci003
 	}
 
-	return &Client{
+	c := &Client{
 		openai:    client,
 		enhancer:  enhancer,
 		responder: responder,
 		model:     model,
+		separator: "\n\n---\n\n",
+	}
+
+	for _, opt := range opts {
+		opt(c)
+	}
+
+	return c
+}
+
+type ClientOption func(client *Client)
+
+func WithSeparator(separator string) ClientOption {
+	return func(c *Client) {
+		c.separator = separator
 	}
 }
 
@@ -45,6 +61,7 @@ func (c *Client) Send(ctx context.Context, req models.Request) error {
 		Model:     c.model,
 		Prompt:    enhanced,
 		MaxTokens: 1000,
+		Stop:      []string{c.separator},
 		User:      req.User,
 	}
 
