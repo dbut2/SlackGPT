@@ -67,7 +67,7 @@ func (e *Default) Enhance(prompt models.Request) (string, error) {
 	enhanced += fmt.Sprintf("<@%s>:", e.botID)
 
 	if len(enhanced) > e.maxPromptLength {
-		enhanced = string(enhanced[len(enhanced)-1-e.maxPromptLength])
+		enhanced = enhanced[len(enhanced)-1-e.maxPromptLength:]
 	}
 
 	return enhanced, nil
