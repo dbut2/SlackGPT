@@ -64,23 +64,15 @@ func (e *Default) Enhance(prompt models.Request) (string, error) {
 		return "", err
 	}
 
-	bot, err := e.slack.GetUserInfo(e.botID)
-	if err != nil {
-		return "", err
-	}
-	preamble := fmt.Sprintf("Welcome to the conversation. Your name is %s and you are a Slack Bot chat bot. Your username is <@%s>.\n\n", bot.Profile.FirstName, bot.ID)
-
 	enhanced := ""
 	for _, s := range ss {
 		enhanced += s + e.separator
 	}
-	enhanced += fmt.Sprintf("[%s <@%s>]: ", bot.Name, bot.ID)
+	enhanced += fmt.Sprintf("<@%s>: ", e.botID)
 
-	if len(enhanced)+len(preamble) > e.maxPromptLength {
-		enhanced = enhanced[len(enhanced)+len(preamble)-1-e.maxPromptLength:]
+	if len(enhanced) > e.maxPromptLength {
+		enhanced = enhanced[len(enhanced)-1-e.maxPromptLength:]
 	}
-
-	enhanced = preamble + enhanced
 
 	return enhanced, nil
 }
@@ -112,12 +104,7 @@ func WithSeparator(separator string) EnhanceOpt {
 }
 
 func (e *Default) formatMessage(msg slack.Message) (string, error) {
-	user, err := e.slack.GetUserInfo(msg.User)
-	if err != nil {
-		return "", err
-	}
-
-	return fmt.Sprintf("[\"%s\" <@%s>]: %s", user.Profile.FirstName, user.ID, msg.Text), nil
+	return fmt.Sprintf("<@%s>: %s", msg.User, msg.Text), nil
 }
 
 func (e *Default) formatMessages(msgs []slack.Message) ([]string, error) {
