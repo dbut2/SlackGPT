@@ -4,7 +4,6 @@ import (
 	"log"
 	"os"
 
-	gogpt "github.com/sashabaranov/go-gpt3"
 	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/socketmode"
 
@@ -26,9 +25,8 @@ func main() {
 	sm := socketmode.New(sc, socketmode.OptionDebug(true), socketmode.OptionLog(log.New(os.Stdout, "sm: ", log.Lshortfile|log.LstdFlags)))
 
 	scc := slackclient.New(sc)
-	oc := gogpt.NewClient(openAIToken)
 	enhancer := prompt.NewEnhancer(scc, slackBotID)
-	sender := openai.New(oc, enhancer, scc, model)
+	sender := openai.New(openAIToken, enhancer, scc, model)
 	eventHandler := events.New(sender)
 
 	s := socket.New(sm, eventHandler)

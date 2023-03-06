@@ -4,9 +4,8 @@ import (
 	"context"
 	"os"
 
-	gogpt "github.com/sashabaranov/go-gpt3"
-
 	"github.com/dbut2/slackgpt/internal/pubsub"
+	"github.com/dbut2/slackgpt/pkg/openai"
 )
 
 func PubSubGenerate(ctx context.Context, m pubsub.PubSubMessage) error {
@@ -16,7 +15,7 @@ func PubSubGenerate(ctx context.Context, m pubsub.PubSubMessage) error {
 	model := os.Getenv("MODEL")
 
 	if model == "" {
-		model = gogpt.GPT3TextDavinci003
+		model = openai.TextDavinci003
 	}
 
 	ps, err := pubsub.New(pubsub.Config{
