@@ -3,7 +3,6 @@ package pubsub
 import (
 	"context"
 
-	gogpt "github.com/sashabaranov/go-gpt3"
 	"github.com/slack-go/slack"
 	"google.golang.org/protobuf/proto"
 
@@ -28,12 +27,10 @@ type Pubsub struct {
 }
 
 func New(config Config) (*Pubsub, error) {
-	gc := gogpt.NewClient(config.OpenAIToken)
-
 	sc := slackclient.New(slack.New(config.SlackBotToken))
 	e := prompt.NewEnhancer(sc, config.SlackBotID)
 
-	sender := openai.New(gc, e, sc, config.Model)
+	sender := openai.New(config.OpenAIToken, e, sc, config.Model)
 
 	return &Pubsub{
 		sender: sender,

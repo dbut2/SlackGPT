@@ -8,24 +8,28 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
-	gogpt "github.com/sashabaranov/go-gpt3"
+	"github.com/sashabaranov/go-openai"
 
 	"github.com/dbut2/slackgpt/pkg/models"
 	"github.com/dbut2/slackgpt/pkg/prompt"
 	"github.com/dbut2/slackgpt/pkg/slackgpt"
 )
 
+const TextDavinci003 = openai.GPT3TextDavinci003
+
 type Client struct {
-	openai    *gogpt.Client
+	openai    *openai.Client
 	enhancer  prompt.Enhancer
 	responder slackgpt.Responder
 	model     string
 	separator string
 }
 
-func New(client *gogpt.Client, enhancer prompt.Enhancer, responder slackgpt.Responder, model string, opts ...ClientOption) *Client {
+func New(token string, enhancer prompt.Enhancer, responder slackgpt.Responder, model string, opts ...ClientOption) *Client {
+	client := openai.NewClient(token)
+
 	if model == "" {
-		model = gogpt.GPT3TextDavinci003
+		model = openai.GPT3TextDavinci003
 	}
 
 	c := &Client{
@@ -57,7 +61,7 @@ func (c *Client) Send(ctx context.Context, req models.Request) error {
 		return err
 	}
 
-	r := gogpt.CompletionRequest{
+	r := openai.CompletionRequest{
 		Model:     c.model,
 		Prompt:    enhanced,
 		MaxTokens: 1000,
@@ -72,7 +76,7 @@ func (c *Client) Send(ctx context.Context, req models.Request) error {
 		Multiplier:      1.5,
 	}
 	for err != nil {
-		if reqErr, ok := err.(*gogpt.RequestError); ok {
+		if reqErr, ok := err.(*openai.RequestError); ok {
 			if reqErr.StatusCode == http.StatusTooManyRequests {
 				nbo := bo.NextBackOff()
 				log.Printf("OpenAI rate limit: %s", nbo.String())
