@@ -2,11 +2,16 @@ package socket
 
 import (
 	"log"
+	"os"
 
+	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/slackevents"
 	"github.com/slack-go/slack/socketmode"
 
 	"github.com/dbut2/slackgpt/pkg/events"
+	"github.com/dbut2/slackgpt/pkg/openai"
+	"github.com/dbut2/slackgpt/pkg/prompt"
+	"github.com/dbut2/slackgpt/pkg/slackclient"
 )
 
 type Config struct {
@@ -22,9 +27,23 @@ type Socket struct {
 	eventHandler events.Handler
 }
 
-func New(socketClient *socketmode.Client, eventHandler events.Handler) *Socket {
+func New(config Config) *Socket {
+	sc := slack.New(config.SlackBotToken, slack.OptionDebug(true), slack.OptionAppLevelToken(config.SlackAppToken), slack.OptionLog(log.New(os.Stdout, "sc: ", log.Lshortfile|log.LstdFlags)))
+	sm := socketmode.New(sc, socketmode.OptionDebug(true), socketmode.OptionLog(log.New(os.Stdout, "sm: ", log.Lshortfile|log.LstdFlags)))
+
+	scc := slackclient.New(sc)
+	enhancer := prompt.NewMessageGetter(scc, config.SlackBotID)
+
+	var opts []openai.ClientOption
+	if config.Model != "" {
+		opts = append(opts, openai.WithModel(config.Model))
+	}
+
+	sender := openai.New(config.OpenAIToken, enhancer, scc, opts...)
+	eventHandler := events.New(sender)
+
 	return &Socket{
-		sm:           socketClient,
+		sm:           sm,
 		eventHandler: eventHandler,
 	}
 }

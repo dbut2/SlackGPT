@@ -62,8 +62,6 @@ jobs:
             OPENAI_TOKEN=projects/511533786015/secrets/openai-token/versions/1
             SLACK_BOT_TOKEN=projects/511533786015/secrets/slack-bot-token/versions/1
             SLACK_BOT_ID=projects/511533786015/secrets/slack-bot-id/versions/1
-          env_vars: |
-            MODEL=text-davinci-003
           event_trigger_type: google.pubsub.topic.publish
           event_trigger_resource: projects/slack-gpt/topics/generate-completion
           event_trigger_service: pubsub.googleapis.com
