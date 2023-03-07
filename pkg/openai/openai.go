@@ -22,18 +22,14 @@ type Client struct {
 	model     string
 }
 
-func New(token string, mg prompt.MessageGetter, responder slackgpt.Responder, model string, opts ...ClientOption) *Client {
+func New(token string, mg prompt.MessageGetter, responder slackgpt.Responder, opts ...ClientOption) *Client {
 	client := openai.NewClient(token)
-
-	if model == "" {
-		model = openai.GPT3Dot5Turbo
-	}
 
 	c := &Client{
 		openai:    client,
 		mg:        mg,
 		responder: responder,
-		model:     model,
+		model:     openai.GPT3Dot5Turbo,
 	}
 
 	for _, opt := range opts {
@@ -45,22 +41,38 @@ func New(token string, mg prompt.MessageGetter, responder slackgpt.Responder, mo
 
 type ClientOption func(client *Client)
 
+func WithModel(model string) ClientOption {
+	return func(c *Client) {
+		if model == "" {
+			return
+		}
+		c.model = model
+	}
+}
+
 func (c *Client) Send(ctx context.Context, req models.Request) error {
 	msgs, err := c.mg.GetMessages(req)
 	if err != nil {
 		return err
 	}
 
+	sms := []openai.ChatCompletionMessage{
+		{
+			Role:    openai.ChatMessageRoleSystem,
+			Content: "You are SlackGPT, a Slack bot built by <@UU3TUL99S>. Answer as concisely as possible.",
+		},
+	}
+
 	ms := mapMessages(msgs)
 
-	for msgsLength(ms) > 3072*4 {
+	for msgsLength(ms)+msgsLength(sms) > (4000-250)*4 {
 		ms = ms[1:]
 	}
 
 	r := openai.ChatCompletionRequest{
 		Model:     openai.GPT3Dot5Turbo,
-		Messages:  ms,
-		MaxTokens: 1024,
+		Messages:  append(sms, ms...),
+		MaxTokens: 250,
 		User:      req.User,
 	}
 
@@ -109,24 +121,19 @@ var roleMap = map[prompt.Role]string{
 
 func mapMessages(msgs []prompt.Message) []openai.ChatCompletionMessage {
 	var ms []openai.ChatCompletionMessage
-
 	for _, msg := range msgs {
 		ms = append(ms, openai.ChatCompletionMessage{
 			Role:    roleMap[msg.Role],
 			Content: msg.Message,
-			Name:    msg.Name,
 		})
 	}
-
 	return ms
 }
 
 func msgsLength(msgs []openai.ChatCompletionMessage) int {
 	c := 0
-
 	for _, msg := range msgs {
 		c += len(msg.Content)
 	}
-
 	return c
 }

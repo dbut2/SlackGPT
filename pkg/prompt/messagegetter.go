@@ -81,7 +81,7 @@ func (e *defaultMessageGetter) GetMessages(prompt models.Request) ([]Message, er
 		messages = append(messages, Message{
 			Role:    role,
 			Message: msg.Text,
-			Name:    msg.Name,
+			Name:    msg.User,
 		})
 	}
 

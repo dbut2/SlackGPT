@@ -4,14 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/slack-go/slack"
-	"github.com/slack-go/slack/socketmode"
-
 	"github.com/dbut2/slackgpt/internal/socket"
-	"github.com/dbut2/slackgpt/pkg/events"
-	"github.com/dbut2/slackgpt/pkg/openai"
-	"github.com/dbut2/slackgpt/pkg/prompt"
-	"github.com/dbut2/slackgpt/pkg/slackclient"
 )
 
 func main() {
@@ -20,15 +13,14 @@ func main() {
 	slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
 	slackBotID := os.Getenv("SLACK_BOT_ID")
 
-	sc := slack.New(slackBotToken, slack.OptionDebug(true), slack.OptionAppLevelToken(slackAppToken), slack.OptionLog(log.New(os.Stdout, "sc: ", log.Lshortfile|log.LstdFlags)))
-	sm := socketmode.New(sc, socketmode.OptionDebug(true), socketmode.OptionLog(log.New(os.Stdout, "sm: ", log.Lshortfile|log.LstdFlags)))
+	config := socket.Config{
+		OpenAIToken:   openAIToken,
+		SlackAppToken: slackAppToken,
+		SlackBotToken: slackBotToken,
+		SlackBotID:    slackBotID,
+	}
 
-	scc := slackclient.New(sc)
-	enhancer := prompt.NewMessageGetter(scc, slackBotID)
-	sender := openai.New(openAIToken, enhancer, scc, "")
-	eventHandler := events.New(sender)
-
-	s := socket.New(sm, eventHandler)
+	s := socket.New(config)
 
 	err := s.Run()
 	if err != nil {

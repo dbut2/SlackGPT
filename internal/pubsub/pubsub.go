@@ -22,17 +22,23 @@ type Config struct {
 	Model         string
 }
 
-type Pubsub struct {
+type PubSub struct {
 	sender slackgpt.Sender
 }
 
-func New(config Config) (*Pubsub, error) {
+func New(config Config) (*PubSub, error) {
 	sc := slackclient.New(slack.New(config.SlackBotToken))
 	e := prompt.NewMessageGetter(sc, config.SlackBotID)
 
-	sender := openai.New(config.OpenAIToken, e, sc, config.Model)
+	var opts []openai.ClientOption
 
-	return &Pubsub{
+	if config.Model != "" {
+		opts = append(opts, openai.WithModel(config.Model))
+	}
+
+	sender := openai.New(config.OpenAIToken, e, sc, opts...)
+
+	return &PubSub{
 		sender: sender,
 	}, nil
 }
@@ -41,7 +47,7 @@ type PubSubMessage struct {
 	Data []byte `json:"data"`
 }
 
-func (p *Pubsub) GenerateFromPubSub(ctx context.Context, m PubSubMessage) error {
+func (p *PubSub) GenerateFromPubSub(ctx context.Context, m PubSubMessage) error {
 	req := new(pkg.Request)
 	err := proto.Unmarshal(m.Data, req)
 	if err != nil {
