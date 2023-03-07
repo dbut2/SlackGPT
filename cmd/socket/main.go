@@ -19,14 +19,13 @@ func main() {
 	slackAppToken := os.Getenv("SLACK_APP_TOKEN")
 	slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
 	slackBotID := os.Getenv("SLACK_BOT_ID")
-	model := os.Getenv("MODEL")
 
 	sc := slack.New(slackBotToken, slack.OptionDebug(true), slack.OptionAppLevelToken(slackAppToken), slack.OptionLog(log.New(os.Stdout, "sc: ", log.Lshortfile|log.LstdFlags)))
 	sm := socketmode.New(sc, socketmode.OptionDebug(true), socketmode.OptionLog(log.New(os.Stdout, "sm: ", log.Lshortfile|log.LstdFlags)))
 
 	scc := slackclient.New(sc)
-	enhancer := prompt.NewEnhancer(scc, slackBotID)
-	sender := openai.New(openAIToken, enhancer, scc, model)
+	enhancer := prompt.NewMessageGetter(scc, slackBotID)
+	sender := openai.New(openAIToken, enhancer, scc, "")
 	eventHandler := events.New(sender)
 
 	s := socket.New(sm, eventHandler)
