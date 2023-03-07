@@ -59,7 +59,7 @@ func (c *Client) Send(ctx context.Context, req models.Request) error {
 	sms := []openai.ChatCompletionMessage{
 		{
 			Role:    openai.ChatMessageRoleSystem,
-			Content: "You are SlackGPT, a Slack bot built by <@UU3TUL99S>. Answer as concisely as possible. Answer in a casual tone.",
+			Content: "You are SlackGPT, a Slack bot built by <@UU3TUL99S>. Answer as concisely as possible.",
 		},
 	}
 
