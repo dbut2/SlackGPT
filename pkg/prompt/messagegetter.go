@@ -1,7 +1,6 @@
 package prompt
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/slack-go/slack"
@@ -11,11 +10,26 @@ import (
 	"github.com/dbut2/slackgpt/pkg/slacktime"
 )
 
-type Enhancer interface {
-	Enhance(prompt models.Request) (string, error)
+type MessageGetter interface {
+	GetMessages(prompt models.Request) ([]Message, error)
 }
 
-type Default struct {
+type Message struct {
+	Role    Role
+	Message string
+	Name    string
+}
+
+type Role int
+
+const (
+	UnknownRole Role = iota
+	SystemRole
+	AssistantRole
+	UserRole
+)
+
+type defaultMessageGetter struct {
 	slack           *slackclient.Client
 	botID           string
 	historyDuration time.Duration
@@ -24,14 +38,12 @@ type Default struct {
 	separator       string
 }
 
-func NewEnhancer(sc *slackclient.Client, botID string, opts ...EnhanceOpt) Enhancer {
-	e := &Default{
+func NewMessageGetter(sc *slackclient.Client, botID string, opts ...EnhanceOpt) MessageGetter {
+	e := &defaultMessageGetter{
 		slack:           sc,
 		botID:           botID,
 		historyDuration: time.Minute * 15,
 		historyCount:    9,
-		maxPromptLength: 10000,
-		separator:       "\n\n---\n\n",
 	}
 
 	for _, opt := range opts {
@@ -41,7 +53,7 @@ func NewEnhancer(sc *slackclient.Client, botID string, opts ...EnhanceOpt) Enhan
 	return e
 }
 
-func (e *Default) Enhance(prompt models.Request) (string, error) {
+func (e *defaultMessageGetter) GetMessages(prompt models.Request) ([]Message, error) {
 	var msgs []slack.Message
 	var err error
 	msgTS := slacktime.ParseString(prompt.SlackMsgTS)
@@ -52,69 +64,52 @@ func (e *Default) Enhance(prompt models.Request) (string, error) {
 		msgs, err = e.slack.GetThreadMessages(prompt.SlackChannel, prompt.SlackThreadTS, msgTS.Add(-e.historyDuration), msgTS)
 	}
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	if len(msgs) > e.historyCount {
 		msgs = msgs[len(msgs)-1-e.historyCount:]
 	}
 
-	ss, err := e.formatMessages(msgs)
-	if err != nil {
-		return "", err
+	var messages []Message
+
+	for _, msg := range msgs {
+		role := UserRole
+		if msg.User == e.botID {
+			role = AssistantRole
+		}
+		messages = append(messages, Message{
+			Role:    role,
+			Message: msg.Text,
+			Name:    msg.Name,
+		})
 	}
 
-	enhanced := ""
-	for _, s := range ss {
-		enhanced += s + e.separator
-	}
-	enhanced += fmt.Sprintf("<@%s>: ", e.botID)
-
-	if len(enhanced) > e.maxPromptLength {
-		enhanced = enhanced[len(enhanced)-1-e.maxPromptLength:]
-	}
-
-	return enhanced, nil
+	return messages, nil
 }
 
-type EnhanceOpt func(*Default)
+type EnhanceOpt func(*defaultMessageGetter)
 
 func WithHistoryDuration(duration time.Duration) EnhanceOpt {
-	return func(e *Default) {
+	return func(e *defaultMessageGetter) {
 		e.historyDuration = duration
 	}
 }
 
 func WithHistoryCount(count int) EnhanceOpt {
-	return func(e *Default) {
+	return func(e *defaultMessageGetter) {
 		e.historyCount = count
 	}
 }
 
 func WithMaxPromptLength(length int) EnhanceOpt {
-	return func(e *Default) {
+	return func(e *defaultMessageGetter) {
 		e.maxPromptLength = length
 	}
 }
 
 func WithSeparator(separator string) EnhanceOpt {
-	return func(e *Default) {
+	return func(e *defaultMessageGetter) {
 		e.separator = separator
 	}
-}
-
-func (e *Default) formatMessage(msg slack.Message) (string, error) {
-	return fmt.Sprintf("<@%s>: %s", msg.User, msg.Text), nil
-}
-
-func (e *Default) formatMessages(msgs []slack.Message) ([]string, error) {
-	s := make([]string, len(msgs))
-	var err error
-	for i, msg := range msgs {
-		s[i], err = e.formatMessage(msg)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return s, nil
 }
