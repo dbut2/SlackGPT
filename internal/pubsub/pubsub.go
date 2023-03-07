@@ -28,7 +28,7 @@ type Pubsub struct {
 
 func New(config Config) (*Pubsub, error) {
 	sc := slackclient.New(slack.New(config.SlackBotToken))
-	e := prompt.NewEnhancer(sc, config.SlackBotID)
+	e := prompt.NewMessageGetter(sc, config.SlackBotID)
 
 	sender := openai.New(config.OpenAIToken, e, sc, config.Model)
 

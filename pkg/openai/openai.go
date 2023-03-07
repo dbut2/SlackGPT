@@ -20,7 +20,6 @@ type Client struct {
 	mg        prompt.MessageGetter
 	responder slackgpt.Responder
 	model     string
-	separator string
 }
 
 func New(token string, mg prompt.MessageGetter, responder slackgpt.Responder, model string, opts ...ClientOption) *Client {
