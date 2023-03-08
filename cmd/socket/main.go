@@ -11,13 +11,13 @@ func main() {
 	openAIToken := os.Getenv("OPENAI_TOKEN")
 	slackAppToken := os.Getenv("SLACK_APP_TOKEN")
 	slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
-	slackBotID := os.Getenv("SLACK_BOT_ID")
+	model := os.Getenv("MODEL")
 
 	config := socket.Config{
 		OpenAIToken:   openAIToken,
 		SlackAppToken: slackAppToken,
 		SlackBotToken: slackBotToken,
-		SlackBotID:    slackBotID,
+		Model:         model,
 	}
 
 	s := socket.New(config)
