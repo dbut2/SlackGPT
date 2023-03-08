@@ -18,7 +18,6 @@ type Config struct {
 	OpenAIToken   string
 	SlackAppToken string
 	SlackBotToken string
-	SlackBotID    string
 	Model         string
 }
 
@@ -32,11 +31,15 @@ func New(config Config) *Socket {
 	sm := socketmode.New(sc, socketmode.OptionDebug(true), socketmode.OptionLog(log.New(os.Stdout, "sm: ", log.Lshortfile|log.LstdFlags)))
 
 	scc := slackclient.New(sc)
-	enhancer := prompt.NewMessageGetter(scc, config.SlackBotID)
+	botID, err := scc.GetBotID()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	enhancer := prompt.NewMessageGetter(scc, botID)
 
 	var opts []openai.ClientOption
-	if config.SlackBotID != "" {
-		opts = append(opts, openai.WithBotID(config.SlackBotID))
+	if botID != "" {
+		opts = append(opts, openai.WithBotID(botID))
 	}
 	if config.Model != "" {
 		opts = append(opts, openai.WithModel(config.Model))

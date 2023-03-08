@@ -59,3 +59,11 @@ func (c *Client) Respond(ctx context.Context, response models.Response) error {
 	_, _, err := c.PostMessage(response.SlackChannel, slack.MsgOptionTS(response.SlackThreadTS), slack.MsgOptionText(response.Completion, false))
 	return err
 }
+
+func (c *Client) GetBotID() (string, error) {
+	resp, err := c.AuthTest()
+	if err != nil {
+		return "", err
+	}
+	return resp.UserID, nil
+}

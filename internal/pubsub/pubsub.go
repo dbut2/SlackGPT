@@ -18,7 +18,6 @@ import (
 type Config struct {
 	OpenAIToken   string
 	SlackBotToken string
-	SlackBotID    string
 	Model         string
 }
 
@@ -28,11 +27,15 @@ type PubSub struct {
 
 func New(config Config) (*PubSub, error) {
 	sc := slackclient.New(slack.New(config.SlackBotToken))
-	e := prompt.NewMessageGetter(sc, config.SlackBotID)
+	botID, err := sc.GetBotID()
+	if err != nil {
+		return nil, err
+	}
+	e := prompt.NewMessageGetter(sc, botID)
 
 	var opts []openai.ClientOption
-	if config.SlackBotID != "" {
-		opts = append(opts, openai.WithBotID(config.SlackBotID))
+	if botID != "" {
+		opts = append(opts, openai.WithBotID(botID))
 	}
 	if config.Model != "" {
 		opts = append(opts, openai.WithModel(config.Model))
