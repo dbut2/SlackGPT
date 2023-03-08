@@ -35,11 +35,14 @@ func New(config Config) *Socket {
 	enhancer := prompt.NewMessageGetter(scc, config.SlackBotID)
 
 	var opts []openai.ClientOption
+	if config.SlackBotID != "" {
+		opts = append(opts, openai.WithBotID(config.SlackBotID))
+	}
 	if config.Model != "" {
 		opts = append(opts, openai.WithModel(config.Model))
 	}
-
 	sender := openai.New(config.OpenAIToken, enhancer, scc, opts...)
+
 	eventHandler := events.New(sender)
 
 	return &Socket{

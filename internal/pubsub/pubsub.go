@@ -31,11 +31,12 @@ func New(config Config) (*PubSub, error) {
 	e := prompt.NewMessageGetter(sc, config.SlackBotID)
 
 	var opts []openai.ClientOption
-
+	if config.SlackBotID != "" {
+		opts = append(opts, openai.WithBotID(config.SlackBotID))
+	}
 	if config.Model != "" {
 		opts = append(opts, openai.WithModel(config.Model))
 	}
-
 	sender := openai.New(config.OpenAIToken, e, sc, opts...)
 
 	return &PubSub{
