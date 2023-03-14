@@ -7,7 +7,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.2.0
 	github.com/sashabaranov/go-openai v1.5.0
 	github.com/slack-go/slack v0.12.1
-	google.golang.org/protobuf v1.29.0
+	google.golang.org/protobuf v1.29.1
 )
 
 require (
