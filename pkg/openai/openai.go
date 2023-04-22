@@ -193,7 +193,7 @@ func request[U, V any](ctx context.Context, f apiFunc[U, V], r U) (V, error) {
 	}
 	for err != nil {
 		if reqErr, ok := err.(*openai.RequestError); ok {
-			if reqErr.StatusCode == http.StatusTooManyRequests {
+			if reqErr.HTTPStatusCode == http.StatusTooManyRequests {
 				nbo := bo.NextBackOff()
 				log.Printf("OpenAI rate limit: %s", nbo.String())
 				time.Sleep(nbo)
