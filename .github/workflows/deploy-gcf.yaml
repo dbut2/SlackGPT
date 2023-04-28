@@ -59,11 +59,11 @@ jobs:
           runtime: go120
           entry_point: PubSubGenerate
           secret_environment_variables: |
-            OPENAI_TOKEN=projects/511533786015/secrets/openai-token/versions/1
+            OPENAI_TOKEN=projects/511533786015/secrets/openai-token/versions/3
             SLACK_BOT_TOKEN=projects/511533786015/secrets/slack-bot-token/versions/2
             SLACK_BOT_ID=projects/511533786015/secrets/slack-bot-id/versions/2
           env_vars: |
-            MODEL=text-davinci-003
+            MODEL=gpt-4
           event_trigger_type: google.pubsub.topic.publish
           event_trigger_resource: projects/slack-gpt/topics/generate-completion
           event_trigger_service: pubsub.googleapis.com
