@@ -3,10 +3,8 @@ package openai
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
@@ -68,28 +66,7 @@ func WithSeparator(separator string) ClientOption {
 }
 
 func (c *Client) Send(ctx context.Context, req models.Request) error {
-	var resp string
-	var err error
-	switch c.model {
-	case
-		openai.GPT3Dot5Turbo,
-		openai.GPT3Dot5Turbo0301,
-		openai.GPT4,
-		openai.GPT40314,
-		openai.GPT432K,
-		openai.GPT432K0314:
-		resp, err = c.requestChat(ctx, req)
-	case
-		openai.GPT3TextDavinci003,
-		openai.GPT3TextDavinci002,
-		openai.GPT3TextDavinci001,
-		openai.GPT3TextCurie001,
-		openai.GPT3TextBabbage001,
-		openai.GPT3TextAda001:
-		resp, err = c.requestCompletion(ctx, req)
-	default:
-		err = errors.New("unsupported model")
-	}
+	resp, err := c.requestChat(ctx, req)
 	if err != nil {
 		return err
 	}
@@ -103,55 +80,6 @@ func (c *Client) Send(ctx context.Context, req models.Request) error {
 }
 
 type apiFunc[U, V any] func(context.Context, U) (V, error)
-
-func (c *Client) requestCompletion(ctx context.Context, req models.Request) (string, error) {
-	msgs, err := c.mg.GetMessages(req)
-	if err != nil {
-		return "", err
-	}
-
-	ss := c.formatMessages(msgs)
-	post := c.formatMessage(prompt.Message{Name: c.botID})
-
-	p := shrinkMsgs((4000-250)*4, ss, post)
-
-	r := openai.CompletionRequest{
-		Model:     c.model,
-		Prompt:    p,
-		MaxTokens: 250,
-		Stop:      []string{c.separator},
-		User:      req.User,
-	}
-
-	resp, err := request(ctx, c.openai.CreateCompletion, r)
-	if err != nil {
-		return "", err
-	}
-
-	if len(resp.Choices) < 1 {
-		return "", errors.New("no completions returned")
-	}
-	if resp.Choices[0].Text == "" {
-		return "", errors.New("empty completion text")
-	}
-	return resp.Choices[0].Text, nil
-}
-
-func (c *Client) formatMessages(msgs []prompt.Message) []string {
-	s := make([]string, len(msgs))
-	var err error
-	for i, msg := range msgs {
-		s[i] = c.formatMessage(msg) + c.separator
-		if err != nil {
-			return nil
-		}
-	}
-	return s
-}
-
-func (c *Client) formatMessage(msg prompt.Message) string {
-	return fmt.Sprintf("<@%s>: %s", msg.Name, msg.Message)
-}
 
 func (c *Client) requestChat(ctx context.Context, req models.Request) (string, error) {
 	msgs, err := c.mg.GetMessages(req)
@@ -241,19 +169,6 @@ func shrinkOpenAIMsgs(max int, sms []openai.ChatCompletionMessage, ms []openai.C
 func msgsLength(msgs []openai.ChatCompletionMessage) int {
 	return getLength(msgs, func(msg openai.ChatCompletionMessage) int {
 		return len(msg.Role) + len(msg.Content) + len(msg.Name)
-	})
-}
-
-func shrinkMsgs(max int, s []string, post string) string {
-	for strSliceLength(s)+len(post) > max {
-		s = s[1:]
-	}
-	return strings.Join(s, "") + post
-}
-
-func strSliceLength(ss []string) int {
-	return getLength(ss, func(s string) int {
-		return len(s)
 	})
 }
 
