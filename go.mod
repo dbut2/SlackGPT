@@ -5,7 +5,7 @@ go 1.20
 require (
 	cloud.google.com/go/pubsub v1.41.0
 	github.com/cenkalti/backoff/v4 v4.3.0
-	github.com/sashabaranov/go-openai v1.28.2
+	github.com/sashabaranov/go-openai v1.29.1
 	github.com/slack-go/slack v0.14.0
 	google.golang.org/protobuf v1.34.2
 )
